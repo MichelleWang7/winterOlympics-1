@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Scrollama Demo: Sticky CSS</title>
+	<meta name="description" content="Scrollama Demo: Sticky CSS">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="./css/style.css">
+	<script type="text/javascript" src="https://d3js.org/d3.v4.min.js"></script>
+	<script type="text/javascript" src="https://russellgoldenberg.github.io/scrollama/stickyfill.min.js"></script>
+	<script type="text/javascript" src='https://unpkg.com/scrollama'></script>
+	<script type="text/javascript" src="./js/viz.js"></script>
+</head>
+
+<body onload="load()">
+	<section id='intro'>
+		<h1 class='intro__hed'>MBL Demographics</h1>
+		<p class='intro__description'>
+			Scroll down to read the story.
+		</p>
+	</section>
+	<section id='scroll'>
+		<div class='scroll__graphic sticky'>
+			<div class='viz'>
+				<!-- <p>0</p> -->
+			</div>
+		</div>
+		<div class='scroll__text'>
+			<div class='step' data-step='1'>
+				<p>STEP 1</p>
+			</div>
+			<div class='step' data-step='2'>
+				<p>STEP 2</p>
+				<p style="font-family: Shadows Into Light, cursive">	Years</p>
+				<input id="slider" type="range" min="1947" max="2016" value="1947" step="1" onchange="filterYear(this.value)" />
+
+				<span id='year'>1947</span>
+
+					<h3>Ethnicity stats:</h3>
+					<div class="stats">
+						<p id='White'>White</p>
+						<p id='AfricanAmerican'>African American</p>
+						<p id='Latino'>Latino</p>
+						<p id='Asian'>Asian</p>
+					</div>
+			</div>
+			<div class='step' data-step='3'>
+				<p>STEP 3</p>
+			</div>
+			<div class='step' data-step='4'>
+				<p>STEP 4</p>
+			</div>
+		</div>
+	</section>
+	<section id='outro'></section>
+	<div class='debug'></div>
+</body>
+
+</html>

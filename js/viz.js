@@ -37,15 +37,11 @@ function load(){
   margin = {top: 20, right: 20, bottom: 50, left: 20},
   width = d3.select(".viz").node().getBoundingClientRect().width - margin.left - margin.right,
   height = d3.select(".viz").node().getBoundingClientRect().height - margin.top - margin.bottom;
-  
+
   svg = d3.select(".viz")
     .append("svg")
-    .attr("width", function(d){
-        return d3.select(".viz").node().getBoundingClientRect().width
-    })
-    .attr("height", function(d){
-        return d3.select(".viz").node().getBoundingClientRect().height
-    });
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom);
 
 
 

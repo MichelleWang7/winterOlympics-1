@@ -11,12 +11,10 @@ var step = null;
 
 
 
-var svg, oData, nodes;
+var svg, oData, nodes, margin,width,height;
 var numNodes = 100;
 
-var margin = {top: 20, right: 20, bottom: 50, left: 20},
-    width = 600 - margin.left - margin.right,
-    height = 600 - margin.top - margin.bottom;
+
 
 
 function load(){
@@ -30,12 +28,25 @@ function load(){
    step = text.selectAll('.step');
   // console.log(container);
 
-  svg = d3.select(".viz").append("svg")
-    .attr("width", width + margin.right + margin.left)
-    .attr("height", height + margin.top + margin.bottom)
+
 
   loadData();
   init();
+
+
+
+  svg = d3.select(".viz")
+    .append("svg")
+    .attr("width", function(d){
+        return d3.select(".viz").node().getBoundingClientRect().width
+    })
+    .attr("height", function(d){
+        return d3.select(".viz").node().getBoundingClientRect().height
+    });
+
+  margin = {top: 20, right: 20, bottom: 50, left: 20},
+  width = d3.select(".viz").node().getBoundingClientRect().width - margin.left - margin.right,
+  height = d3.select(".viz").node().getBoundingClientRect().height - margin.top - margin.bottom;
 
 }
 
@@ -56,12 +67,15 @@ function handleResize() {
     .style('width', graphicWidth + 'px')
     .style('height', window.innerHeight + 'px');
 
-  var chartMargin = 32;
+  var chartMargin = 20;
   var chartWidth = graphic.node().offsetWidth - chartMargin;
 
   chart
     .style('width', chartWidth + 'px')
     .style('height', Math.floor(window.innerHeight / 2) + 'px');
+
+      // .attr("width", width + margin.right + margin.left)
+      // .attr("height", height + margin.top + margin.bottom)
 
 
   // 3. tell scrollama to update new element dimensions
@@ -72,6 +86,7 @@ function handleResize() {
 function handleStepEnter(response) {
   //ACA PASA TODA LA MAGIA, ACA DEBO DE HACER EL UPDATE DEL CHART
   // response = { element, direction, index }
+  console.log('entra: ' + response.index);
   var stepNumber = response.index + 1
   // add color to current step only
   step.classed('is-active', function (d, i) {
@@ -99,7 +114,8 @@ function handleStepEnter(response) {
 }
 
 function handleStepExit(response){
-  // console.log('sale: ' + response.index)
+  console.log('sale: ' + response.index)
+
   clearSVG();
 }
 
@@ -113,6 +129,7 @@ function handleContainerExit(response) {
 }
 
 function setupStickyfill() {
+  console.log('entra sticky');
   d3.selectAll('.sticky').each(function () {
     Stickyfill.add(this);
   });
@@ -247,20 +264,20 @@ function update(data){
       items.exit().remove();
 
       items
+
           .attr('cx',function(d){ return d.x })
           .attr('cy',function(d){ return d.y })
           .style('fill',function(d){
              var color = colorScale.find(colors=>{return colors.Ethnicity===d.Ethnicity})
              return color.color;
           })
-          .style('opacity',.8);
+          .style('opacity',.7);
       }
 
    simulation
        .nodes(data)
        .on("tick", ticked)
        .alpha(.8);
-
 
 }
 
@@ -269,7 +286,6 @@ function update(data){
 function drawChart(){
 
   g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
 
   var x = d3.scaleTime().range([0,width]);
   var y = d3.scaleLinear().range([height,0]);
@@ -350,6 +366,6 @@ function drawChart(){
 
 
 function clearSVG(){
-  svg.selectAll('g')
-    .remove();
+  svg.selectAll('*').transition().style('opacity',0).duration(1000).remove();
+
 }

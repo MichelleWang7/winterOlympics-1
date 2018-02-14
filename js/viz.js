@@ -8,14 +8,8 @@ var chart = null;
 var text = null;
 var step = null;
 
-
-
-
 var svg, oData, nodes, margin,width,height;
 var numNodes = 100;
-
-
-
 
 function load(){
   // ************************
@@ -33,7 +27,7 @@ function load(){
   loadData();
   init();
 
-
+  // set svg object
   margin = {top: 20, right: 20, bottom: 50, left: 20},
   width = d3.select(".viz").node().getBoundingClientRect().width - margin.left - margin.right,
   height = d3.select(".viz").node().getBoundingClientRect().height - margin.top - margin.bottom;
@@ -70,10 +64,6 @@ function handleResize() {
   chart
     .style('width', chartWidth + 'px')
     .style('height', Math.floor(window.innerHeight / 2) + 'px');
-
-      // .attr("width", width + margin.right + margin.left)
-      // .attr("height", height + margin.top + margin.bottom)
-
 
   // 3. tell scrollama to update new element dimensions
   scroller.resize();

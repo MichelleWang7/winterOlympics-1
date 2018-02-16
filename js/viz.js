@@ -1,358 +1,209 @@
-// initialize the scrollama
-var scroller = scrollama();
-
-// variables required for scrollama
-var container = null;
-var graphic = null;
-var chart = null;
-var text = null;
-var step = null;
-
-var svg, oData, nodes, margin,width,height;
-var numNodes = 100;
+var svg, oData, nodes, margin,width,height, x,y;
 
 function load(){
-  // ************************
-  // Set scroll elements
-  // *************************
-   container = d3.select('#scroll');
-   graphic = container.select('.scroll__graphic');
-   chart = graphic.select('.viz');
-   text = container.select('.scroll__text');
-   step = text.selectAll('.step');
-  // console.log(container);
-
-
-
   loadData();
-  init();
 
   // set svg object
-  margin = {top: 20, right: 20, bottom: 50, left: 20},
-  width = d3.select(".viz").node().getBoundingClientRect().width - margin.left - margin.right,
-  height = d3.select(".viz").node().getBoundingClientRect().height - margin.top - margin.bottom;
+  margin = {top: 40, right: 40, bottom: 50, left: 40},
+  width = 800 - margin.left - margin.right,
+  height = 600 - margin.top - margin.bottom;
+  // width = d3.select(".viz").node().getBoundingClientRect().width - margin.left - margin.right,
+  // height = d3.select(".viz").node().getBoundingClientRect().height - margin.top - margin.bottom;
+
 
   svg = d3.select(".viz")
     .append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom);
+    .attr("width", width)
+    .attr("height", height)
+    .call(responsivefy);
 
-
-
-}
-
-
-// generic window resize listener event
-function handleResize() {
-  // 1. update height of step elements
-  var stepHeight = Math.floor(window.innerHeight * 0.75);
-  step.style('height', stepHeight + 'px');
-
-  // 2. update width/height of graphic element
-  var bodyWidth = d3.select('body').node().offsetWidth;
-  var textWidth = text.node().offsetWidth;
-
-  var graphicWidth = bodyWidth - textWidth;
-
-  graphic
-    .style('width', graphicWidth + 'px')
-    .style('height', window.innerHeight + 'px');
-
-  var chartMargin = 20;
-  var chartWidth = graphic.node().offsetWidth - chartMargin;
-
-  chart
-    .style('width', chartWidth + 'px')
-    .style('height', Math.floor(window.innerHeight / 2) + 'px');
-
-  // 3. tell scrollama to update new element dimensions
-  scroller.resize();
-}
-
-// scrollama event handlers
-function handleStepEnter(response) {
-  //ACA PASA TODA LA MAGIA, ACA DEBO DE HACER EL UPDATE DEL CHART
-  // response = { element, direction, index }
-  console.log('entra: ' + response.index);
-  var stepNumber = response.index + 1
-  // add color to current step only
-  step.classed('is-active', function (d, i) {
-    return i === response.index;
-
-  })
-
-  //DRAW & DELETE CHART DEPENDING ON THE STEP
-  switch (stepNumber) {
-    case 2:
-        filterYear(1947);
-        break;
-    case 3:
-        drawChart();
-        break;
-
-    // default:
-    //   chart.select('p').text(response.index + 1)
-
-  }
-
-
-  // update graphic based on step
+  g = svg.append("g")
+      // .attr("id",gender)
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 }
-
-function handleStepExit(response){
-  console.log('sale: ' + response.index)
-
-  clearSVG();
-}
-
-function handleContainerEnter(response) {
-  // console.log(response);
-  // response = { direction }
-}
-
-function handleContainerExit(response) {
-  // response = { direction }
-}
-
-function setupStickyfill() {
-  console.log('entra sticky');
-  d3.selectAll('.sticky').each(function () {
-    Stickyfill.add(this);
-  });
-}
-
-function init() {
-  setupStickyfill();
-
-  // 1. force a resize on load to ensure proper dimensions are sent to scrollama
-  handleResize();
-
-  // 2. setup the scroller passing options
-  // this will also initialize trigger observations
-  // 3. bind scrollama event handlers (this can be chained like below)
-  scroller.setup({
-    container: '#scroll',
-    graphic: '.scroll__graphic',
-    text: '.scroll__text',
-    step: '.scroll__text .step',
-    offset: .5,
-    debug: false,
-  })
-    .onStepEnter(handleStepEnter)
-    .onStepExit(handleStepExit)
-    .onContainerEnter(handleContainerEnter)
-    .onContainerExit(handleContainerExit);
-
-  // setup resize event
-  window.addEventListener('resize', handleResize);
-}
-
 
 function loadData(){
-
-  d3.csv("./data/MLB.csv",function(data){
+  d3.csv("./data/WinerOlympicMedals.csv",function(data){
 
     // Cast Data
     data.forEach(function (d){
-      d.Year = new Date(d.Year);
-      d.Players = Math.round(+d.Players * 10000,0);
+      d.MedalRank = +d.MedalRank;
     });
 
     oData = data
 
-    // filterYear(1947);
+    //***************************************************************
+    //** draw axis, this is one off task
+    //** check whether this is the best place to put this code
+    //***************************************************************
+
+    // Get unique years
+    var years = []
+    var a = new Set(oData.map(item=>{return item.Year}))
+    a.forEach(item=>{years.push(item)});
+
+    // Get unique ages
+    var ages = []
+    a = new Set(oData.map(item=>{return item.Age}))
+    a.forEach(item=>{ages.push(item)});
+
+    x = d3.scaleBand().rangeRound([0, width]);
+    y = d3.scaleBand().rangeRound([height, 0]);
+
+    x.domain(years);
+    y.domain(ages.sort(function (a,b){return b-a}));
+
+    g.append("g")
+      .call(d3.axisTop(x))
+        // .selectAll("text")
+        // .remove();
+
+    g.append("g")
+        .attr("class", "y axis")
+        .call(d3.axisLeft(y));
+
+
+
+    // filterData('Women');
+    // cleanSVG('Women');
 
   })
+
+  // filterData('Men');
 }
 
+function filterData(gender){
 
+  if (gender==='Men'){
+      // cleanSVG('Women');
+  }else{
+    // cleanSVG('Men');
+  }
 
-function filterYear(year){
-  document.getElementById('year').innerText = year;
-  filterData(+year);
-
-}
-
-
-function filterData(nYear){
-
-
-  oYearData = oData.filter(item=>{
-    return item.Year.getFullYear() === nYear
-  })
-
-  // For each year, I create 100 dots, representing 100% of playes
-  // then i create n categories according to the stats for each Ethnicity
-  var x = []
-
-  oYearData.forEach(item=>{
-    var data = []
-    data.push(d3.range(item.Players).map(function(d){
-      return {Ethnicity: item.Ethnicity}
-    }))
-    x = x.concat(data[0].slice());
-
-
-    // UPDATE LABELS WITH STATS FOR YEAR SELECTED
-    var txt = '#' + item.Ethnicity.replace(' ','')
-    d3.selectAll(txt).text(item.Ethnicity + ': ' + item.Players + ' %' )
-
+  genderData = oData.filter(item=>{
+      return item.Gender === gender;
   });
 
 
-
-  update(x)
-
-}
-
-function update(data){
-
-    g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-    var xCenter = [
-      {'Ethnicity': 'White', 'center': 100}
-      ,{'Ethnicity': 'African American','center': 200}
-      ,{'Ethnicity': 'Latino', 'center': 300}
-      ,{'Ethnicity': 'Asian', 'center': 400}
-    ];
-
-    var colorScale = [
-      {'Ethnicity': 'White', 'color': '#B22650'}
-      ,{'Ethnicity': 'African American','color': '#53B8BD'}
-      ,{'Ethnicity': 'Latino', 'color': '#D4D85F'}
-      ,{'Ethnicity': 'Asian', 'color': '#F2B356'}
-    ];
-
-
-    var simulation  = d3.forceSimulation()
-      .force('charge', d3.forceManyBody().strength(-10).distanceMax(90))
-      .force('center',d3.forceCenter(width/2,height/2))
-      .force('x', d3.forceX().x(function(d) {
-        var position = xCenter.find(pos=>{return pos.Ethnicity===d.Ethnicity})
-        return position.center;
-      }));
-
-
-
-    var ticked = function() {
-
-      var items = svg.select('g')
-        .selectAll('circle')
-        .data(data)
-
-
-
-      items.enter()
-        .append('circle')
-        .attr('r',10)
-        .merge(items)
-
-      items.exit().remove();
-
-      items
-
-          .attr('cx',function(d){ return d.x })
-          .attr('cy',function(d){ return d.y })
-          .style('fill',function(d){
-             var color = colorScale.find(colors=>{return colors.Ethnicity===d.Ethnicity})
-             return color.color;
-          })
-          .style('opacity',.7);
-      }
-
-   simulation
-       .nodes(data)
-       .on("tick", ticked)
-       .alpha(.8);
+  bubbleCrossTab(genderData,gender);
 
 }
 
 
 
-function drawChart(){
+function bubbleCrossTab(data,gender){
 
-  g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+  // g = svg.append("g")
+  //   .attr("id",gender)
+  //   .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-  var x = d3.scaleTime().range([0,width]);
-  var y = d3.scaleLinear().range([height,0]);
-
-  x.domain(d3.extent(oData,function(d){return d.Year}))
-  y.domain([0,d3.max(oData,function (d){ return d.Players})])
-
-  var whiteTrend = oData.filter(item=>{
-    return item.Ethnicity ==='White'
-  });
-
-  var AmericanTrend = oData.filter(item=>{
-    return item.Ethnicity ==='African American'
-  });
-
-  var LatinoTrend = oData.filter(item=>{
-    return item.Ethnicity ==='Latino'
-  });
-
-  var AsianTrend = oData.filter(item=>{
-    return item.Ethnicity ==='Asian'
-  });
-
-  var whiteLine = d3.line(whiteTrend)
-    .x(function (d){return x(d.Year)})
-    .y(function (d){return y(d.Players)})
-
-    var AmericanLine = d3.line(AmericanTrend)
-      .x(function (d){return x(d.Year)})
-      .y(function (d){return y(d.Players)})
-
-  // var items = svg.select('g')
-  var lineWhite = g.selectAll('.line')
-    .data([whiteTrend])
-
-  var lineAmerican = g.selectAll('.line')
-    .data([AmericanTrend])
-
-  lineWhite.enter()
-    .append('path')
-    .merge(lineWhite)
-    .attr('class','line')
-    .attr('d',whiteLine)
-
-  lineWhite.exit().remove();
-
-  // lineAmerican.enter()
-  //   .append('path')
-  //   .merge(lineAmerican)
-  //   .attr('class','line')
-  //   .attr('d',AmericanLine)
+  // Get unique years
+  // var years = []
+  // var a = new Set(data.map(item=>{return item.Year}))
+  // a.forEach(item=>{years.push(item)});
   //
-  // lineAmerican.exit().remove();
+  var medalsByYear = d3.nest()
+    .key(function (d){ return d.Age }).sortKeys(d3.descending)
+    .key(function (d){ return d.Year })
+    .rollup(function (v){ return v.length})
+    .entries(data);
+  //
+  //   var x = d3.scaleBand().rangeRound([0, width]);
+  //   var y = d3.scaleBand().rangeRound([height, 0]);
+  //
+  //
+  //   x.domain(years);
+  //   y.domain(medalsByYear.map(function (d) { return d.key;}));
 
-  g.selectAll('.line')
-    .call(transition);
+  console.log(medalsByYear);
 
-  g.append("g")
-     .attr("transform", "translate(0," + height + ")")
-     .call(d3.axisBottom(x));
+  var radius = d3.scaleLinear()
+      .domain([0, 75])
+      .range([0, 50]);
 
-   // Add the Y Axis
-   g.append("g")
-       .call(d3.axisLeft(y));
 
-   function transition(path) {
-         path.transition()
-             .duration(2000)
-             .attrTween("stroke-dasharray", tweenDash);
-     }
-     function tweenDash() {
-         var l = this.getTotalLength(),
-             i = d3.interpolateString("0," + l, l + "," + l);
-         return function (t) { return i(t); };
-     }
+
+  var rows = g.selectAll(".row")
+      .data(medalsByYear)
+
+
+  rows.enter()
+      .append("g")
+      .attr("class", "row")
+      .attr("transform", function (d) { return "translate(0," + y(d.key) + ")"; })
+      // .merge(rows);
+
+
+
+  var cells = rows.selectAll(".cell")
+      .data(function (d) { return d.values; })
+
+      .enter()
+      .append("g")
+      .attr("transform", function (d, i) { return "translate(" + i * x.bandwidth() + ",0)"; })
+      .attr("class", "cell")
+      // .merge(cells);
+
+
+
+      var circle = cells.append("circle")
+          .attr("class", gender)
+          .attr("cx", x.bandwidth())
+          .attr("cy", y.bandwidth() )
+          // .attr("cx", x(d.key)
+          // .attr("cy", function (d){
+          //   console.log(d);
+          // });
+          .attr("r", function (d) {
+            return d.value === 0 ? 0 : radius(d.value);
+          })
+          .style('opacity',1)
+          // .on("click", highlightCircles);
+
+
+  // rows.merge(rows).exit().remove();
+  // cells.merge(cells).exit().remove();
+
+
+  // g.append("g")
+  //   .call(d3.axisTop(x))
+  //     // .selectAll("text")
+  //     // .remove();
+  //
+  // g.append("g")
+  //     .attr("class", "y axis")
+  //     .call(d3.axisLeft(y));
+
+}
+
+function cleanSVG(gender){
+  svg.selectAll('#' + gender)
+    .transition()
+    .style('opacity',0)
+    .duration(1000);
+    // .remove();
 
 }
 
 
-function clearSVG(){
-  svg.selectAll('*').transition().style('opacity',0).duration(1000).remove();
 
+
+// function to resize svg dynamicaly
+// taken from @alandunning
+// http://bl.ocks.org/alandunning/51c76ec99c3ffee2fde6923ac14a4dd4
+function responsivefy(svg) {
+  var container = d3.select(svg.node().parentNode);
+  var width = parseInt(svg.style("width"));
+  var height = parseInt(svg.style("height"));
+  var aspect = width / height;
+  svg.attr("viewBox", "0 0 " + width + " " + height)
+      .attr("perserveAspectRatio", "xMinYMid")
+      .call(resize);
+  function resize() {
+      var targetWidth = parseInt(container.style("width"));
+      svg.attr("width", targetWidth);
+      svg.attr("height", Math.round(targetWidth / aspect));
+  }
+  d3.select(window).on("resize." + container.attr("id"), resize);
 }

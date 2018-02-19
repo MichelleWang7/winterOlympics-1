@@ -18,8 +18,7 @@ function load(){
     .call(responsivefy);
 
   g = svg.append("g")
-      // .attr("id",gender)
-      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 }
 
@@ -56,13 +55,9 @@ function loadData(){
 
     g.append("g")
       .call(d3.axisTop(x))
-        // .selectAll("text")
-        // .remove();
 
     g.append("g")
-        .attr("class", "y axis")
-        .call(d3.axisLeft(y));
-
+      .call(d3.axisLeft(y));
 
     // Initial chart when load page
     filterData('Women');
@@ -72,19 +67,11 @@ function loadData(){
 
 function filterData(gender){
 
-  if (gender==='Men'){
-      // cleanSVG('Women');
-  }else{
-    // cleanSVG('Men');
-  }
-
   genderData = oData.filter(item=>{
       return item.Gender === gender;
   });
 
-
   bubbleCrossTab(genderData,gender);
-
 }
 
 
@@ -139,9 +126,6 @@ function bubbleCrossTab(data,gender){
         return d.value === 0 ? 0 : radius(d.value);
       })
       .style('opacity',.6)
-  // .on("click", highlightCircles);
-
-
 }
 
 function cleanSVG(gender){

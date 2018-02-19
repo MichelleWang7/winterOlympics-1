@@ -7,8 +7,6 @@ function load(){
   margin = {top: 40, right: 40, bottom: 50, left: 40},
   width = 800 - margin.left - margin.right,
   height = 600 - margin.top - margin.bottom;
-  // width = d3.select(".viz").node().getBoundingClientRect().width - margin.left - margin.right,
-  // height = d3.select(".viz").node().getBoundingClientRect().height - margin.top - margin.bottom;
 
 
   svg = d3.select(".viz")
@@ -30,8 +28,6 @@ function loadData(){
       d.MedalRank = +d.MedalRank;
     });
 
-    oData = data
-
     //***************************************************************
     //** draw axis, this is one off task
     //** check whether this is the best place to put this code
@@ -39,12 +35,12 @@ function loadData(){
 
     // Get unique years
     var years = []
-    var a = new Set(oData.map(item=>{return item.Year}))
+    var a = new Set(data.map(item=>{return item.Year}))
     a.forEach(item=>{years.push(item)});
 
     // Get unique ages
     var ages = []
-    a = new Set(oData.map(item=>{return item.Age}))
+    a = new Set(data.map(item=>{return item.Age}))
     a.forEach(item=>{ages.push(item)});
 
     x = d3.scaleBand().rangeRound([0, width]);
@@ -64,54 +60,88 @@ function loadData(){
         .attr("id","grid")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+
+
+
+    let nested_data = d3.nest()
+      .key((d) => d.Age)
+      .key((d) => d.Year)
+      .key((d) => d.Gender)
+      .rollup((v) => v.length)
+      .entries(data.filter(d => d.Gender == "Men" | d.Gender == "Women"))
+
+  console.log(nested_data);
+
+      // function to get values out
+      get_value = (arr, gender) => {
+      try {
+        return arr.filter(d => d.key == gender)[0].value || 0
+      } catch(e) {
+        return 0
+        }
+      }
+
+      let final_data = []
+
+      nested_data.forEach((age) => {
+          age.values.forEach((year) => {
+            final_data.push({Age: age.key,
+              Year: year.key,
+              Men: get_value(year.values, "Men"),
+              Women: get_value(year.values, "Women")})
+            })
+      })
+
+    oData = final_data;
+
     // Initial chart when load page
-    // filterData('Men');
-    update(data, 'Men')
+    update('Men')
 
   })
 }
 
-function filterData(gender){
 
-  // if (gender==='Men'){
-  //     cleanSVG('Women');
-  // }else {
-  //     cleanSVG('Men');
-  // }
-  genderData = oData.filter(item=>{
-      return item.Gender === gender;
-  });
+function update(gender){
 
-  // var medalsByYear = d3.nest()
-  //   .key(function (d){ return d.Age }).sortKeys(d3.descending)
-  //   .key(function (d){ return d.Year })
-  //   .rollup(function (v){ return v.length})
-  //   .entries(genderData);
+  var t = d3.transition()
+      .duration(750);
 
-  update(genderData,gender);
-}
+  var radius = d3.scaleLinear()
+      .domain([0, 75])
+      .range([0, 50]);
 
-function update(data,gender){
-
-  // console.log(data);
   var circles = svg.select('#grid')
         .selectAll('circle')
-        .data(data,function(d){return d.Gender === gender})
+        .data(oData)
 
-  circles
-    .exit()
-    .transition()
-    .duration(1000)
-    .style('opacity',0)
-    .remove();
+  //********* NO NEED TO EXIT BECAUSE THERE WILL BE THE SAME # OF DOM ELEMENTS*************//
 
+  // circles
+  //   .exit()
+  //   .transition(t)
+  //   .attr('r',0)
+  //   .style('opacity',0)
+  //   .remove();
+
+  //******** UPDATE ELEMENTS ************//
   circles
     .attr("class", gender)
-    .attr('r',5)
+    .attr('r',0)
     .attr('cx', function(d){return x(d.Year)})
-    .attr('cy', function(d){return y(d.Age)});
+    .attr('cy', function(d){return y(d.Age)})
+    .transition(t)
+    .ease(d3.easeBounce)
+    .attr('r',function(d){
+        if (gender==='Men'){
+          return radius(d.Men)
+        }else{
+          return radius(d.Women)
+        }
+    })
+    .style('opacity',.8)
 
 
+  //******** ENTER ELEMENTS ************//
   circles
     .enter()
     .append('circle')
@@ -119,93 +149,21 @@ function update(data,gender){
     .attr('r',0)
     .attr('cx', function(d){return x(d.Year)})
     .attr('cy', function(d){return y(d.Age)})
-    .transition()
-    .duration(1000)
+    .transition(t)
     .ease(d3.easeBounce)
-    .attr('r',5)
+    .attr('r',function(d){
+        if (gender==='Men'){
+          return radius(d.Men)
+        }else{
+          return radius(d.Women)
+        }
+    })
     .style('opacity',.8)
 
-}
-
-function bubbleCrossTab(data,gender){
-
-  // console.log(data)
-  // var medalsByYear = d3.nest()
-  //   .key(function (d){ return d.Age }).sortKeys(d3.descending)
-  //   .key(function (d){ return d.Year })
-  //   .rollup(function (v){ return v.length})
-  //   .entries(data);
-
-  //need to get d3.extent() when grouping by year & gender
-  var radius = d3.scaleLinear()
-      .domain([0, 75])
-      .range([0, 50]);
-
-      //*************scatter plot**************//
-  // var grid = svg.selectAll("#grid")
-  //
-  // var cells = grid.selectAll(".cells")
-  //     .data(data)
-  // cells.exit().remove();
-  //
-  // cells
-  //   .enter()
-  //   .append('circle')
-  //   .attr('cx', function(d){return x(d.Year)})
-  //   .attr('cy', function(d){return y(d.Age)})
-  //   .attr("class", gender)
-  //   .attr('r',0)
-  //   .style('opacity',0)
-  //   .transition()
-  //   .duration(1000)
-  //   .attr('r',5)
-  //   .style('opacity',.6)
-
-
-
-  //*************burble**************//
-
-  // var grid = svg.select("#grid")
-  //
-  // var rows = grid.selectAll(".row")
-  //     .data(medalsByYear)
-  //     .enter()
-  //     .append("g")
-  //     .attr("class", "row")
-  //     .attr("transform", function (d) { return "translate(0," + y(d.key) + ")"; })
-  //
-  // var cells = rows.selectAll(".cell")
-  //     .data(function (d) { return d.values; })
-  //     .enter()
-  //     .append("g")
-  //     .attr("transform", function (d, i) { return "translate(" + i * x.bandwidth() + ",0)"; })
-  //     .attr("class", "cell")
-  //
-  // var circle = cells.append("circle")
-  //     .attr("class", gender)
-  //     .attr("cx", x.bandwidth())
-  //     .attr("cy", y.bandwidth() )
-  //     .attr('r',0)
-  //     .transition()
-  //     .duration(1500)
-  //     .attr("r", function (d) {
-  //       return d.value === 0 ? 0 : radius(d.value);
-  //     })
-  //     .style('opacity',.6)
-}
-
-function cleanSVG(gender){
-
-  // svg.select('#grid').selectAll('g')
-  // svg.select('#grid').selectAll(function(){return this.childNodes})
-  svg.select('#grid').selectAll('*')
-    .transition()
-
-    .style('opacity',0)
-    .duration(500)
-    .remove();
 
 }
+
+
 
 // function to resize svg dynamicaly
 // taken from @alandunning

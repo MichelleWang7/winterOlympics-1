@@ -89,11 +89,19 @@ function bubbleCrossTab(data,gender){
       .domain([0, 75])
       .range([0, 50]);
 
+  // console.log(medalsByYear);
+
   var rows = g.selectAll(".row")
       .data(medalsByYear)
 
+  console.log(rows);
 
-  // rows
+  rows.exit().remove();
+
+  console.log(rows);
+
+  
+  rows
       .enter()
       .append("g")
       .attr("class", "row")
@@ -105,6 +113,7 @@ function bubbleCrossTab(data,gender){
 
   var cells = rows.selectAll(".cell")
       .data(function (d) { return d.values; })
+
 
   // cells
       .enter()

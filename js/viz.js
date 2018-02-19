@@ -64,8 +64,11 @@ function loadData(){
         .call(d3.axisLeft(y));
 
 
+    grid = g.append("g")
+      .attr("id","grid")
+      // .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    // filterData('Women');
+    filterData('Women');
     // cleanSVG('Women');
 
   })
@@ -94,86 +97,61 @@ function filterData(gender){
 
 function bubbleCrossTab(data,gender){
 
-  // g = svg.append("g")
-  //   .attr("id",gender)
-  //   .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
   // Get unique years
   // var years = []
   // var a = new Set(data.map(item=>{return item.Year}))
   // a.forEach(item=>{years.push(item)});
-  //
+
   var medalsByYear = d3.nest()
     .key(function (d){ return d.Age }).sortKeys(d3.descending)
     .key(function (d){ return d.Year })
     .rollup(function (v){ return v.length})
     .entries(data);
-  //
-  //   var x = d3.scaleBand().rangeRound([0, width]);
-  //   var y = d3.scaleBand().rangeRound([height, 0]);
-  //
-  //
-  //   x.domain(years);
-  //   y.domain(medalsByYear.map(function (d) { return d.key;}));
 
-  console.log(medalsByYear);
+  // console.log(medalsByYear);
 
   var radius = d3.scaleLinear()
       .domain([0, 75])
       .range([0, 50]);
 
-
-
-  var rows = g.selectAll(".row")
+  var rows = grid.selectAll(".row")
       .data(medalsByYear)
-
-
-  rows.enter()
+      .enter()
       .append("g")
       .attr("class", "row")
       .attr("transform", function (d) { return "translate(0," + y(d.key) + ")"; })
-      // .merge(rows);
+      // .merge();
 
 
 
   var cells = rows.selectAll(".cell")
       .data(function (d) { return d.values; })
-
       .enter()
       .append("g")
       .attr("transform", function (d, i) { return "translate(" + i * x.bandwidth() + ",0)"; })
       .attr("class", "cell")
       // .merge(cells);
 
-
-
-      var circle = cells.append("circle")
-          .attr("class", gender)
-          .attr("cx", x.bandwidth())
-          .attr("cy", y.bandwidth() )
-          // .attr("cx", x(d.key)
-          // .attr("cy", function (d){
-          //   console.log(d);
-          // });
-          .attr("r", function (d) {
-            return d.value === 0 ? 0 : radius(d.value);
-          })
-          .style('opacity',1)
+  var circle = cells.append("circle")
+      .attr("class", gender)
+      .attr("cx", x.bandwidth())
+      .attr("cy", y.bandwidth() )
+      // .attr("cx", x(d.key)
+      // .attr("cy", function (d){
+      //   console.log(d);
+      // });
+      .attr("r", function (d) {
+        return d.value === 0 ? 0 : radius(d.value);
+      })
+      .style('opacity',0)
+      .transition()
+      .duration(1000)
+      .style('opacity',1)
           // .on("click", highlightCircles);
 
 
   // rows.merge(rows).exit().remove();
   // cells.merge(cells).exit().remove();
-
-
-  // g.append("g")
-  //   .call(d3.axisTop(x))
-  //     // .selectAll("text")
-  //     // .remove();
-  //
-  // g.append("g")
-  //     .attr("class", "y axis")
-  //     .call(d3.axisLeft(y));
 
 }
 

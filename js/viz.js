@@ -64,16 +64,10 @@ function loadData(){
         .call(d3.axisLeft(y));
 
 
-    grid = g.append("g")
-      .attr("id","grid")
-      // .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
+    // Initial chart when load page
     filterData('Women');
-    // cleanSVG('Women');
 
   })
-
-  // filterData('Men');
 }
 
 function filterData(gender){
@@ -97,61 +91,56 @@ function filterData(gender){
 
 function bubbleCrossTab(data,gender){
 
-  // Get unique years
-  // var years = []
-  // var a = new Set(data.map(item=>{return item.Year}))
-  // a.forEach(item=>{years.push(item)});
-
   var medalsByYear = d3.nest()
     .key(function (d){ return d.Age }).sortKeys(d3.descending)
     .key(function (d){ return d.Year })
     .rollup(function (v){ return v.length})
     .entries(data);
 
-  // console.log(medalsByYear);
-
+  //need to get d3.extent() when grouping by year & gender
   var radius = d3.scaleLinear()
       .domain([0, 75])
       .range([0, 50]);
 
-  var rows = grid.selectAll(".row")
+  var rows = g.selectAll(".row")
       .data(medalsByYear)
+
+
+  // rows
       .enter()
       .append("g")
       .attr("class", "row")
       .attr("transform", function (d) { return "translate(0," + y(d.key) + ")"; })
-      // .merge();
+      // .merge(rows);
 
+  // rows.exit().remove();
 
 
   var cells = rows.selectAll(".cell")
       .data(function (d) { return d.values; })
+
+  // cells
       .enter()
       .append("g")
       .attr("transform", function (d, i) { return "translate(" + i * x.bandwidth() + ",0)"; })
       .attr("class", "cell")
       // .merge(cells);
 
+  // cells.merge(cells).exit().remove();
+
   var circle = cells.append("circle")
       .attr("class", gender)
       .attr("cx", x.bandwidth())
       .attr("cy", y.bandwidth() )
-      // .attr("cx", x(d.key)
-      // .attr("cy", function (d){
-      //   console.log(d);
-      // });
+      .attr('r',0)
+      .transition()
+      .duration(1500)
       .attr("r", function (d) {
         return d.value === 0 ? 0 : radius(d.value);
       })
-      .style('opacity',0)
-      .transition()
-      .duration(1000)
-      .style('opacity',1)
-          // .on("click", highlightCircles);
+      .style('opacity',.6)
+  // .on("click", highlightCircles);
 
-
-  // rows.merge(rows).exit().remove();
-  // cells.merge(cells).exit().remove();
 
 }
 
@@ -163,9 +152,6 @@ function cleanSVG(gender){
     // .remove();
 
 }
-
-
-
 
 // function to resize svg dynamicaly
 // taken from @alandunning

@@ -24,7 +24,12 @@ function loadData(){
   d3.csv("./data/WinerOlympicMedals.csv",function(data){
 
     // Cast Data
-    data.forEach(function (d){
+    // data.forEach(function (d){
+    //   d.MedalRank = +d.MedalRank;
+    // });
+
+    //ES6 -FAT ARROW Function
+    data.forEach((d)=>{
       d.MedalRank = +d.MedalRank;
     });
 
@@ -47,7 +52,10 @@ function loadData(){
     y = d3.scaleBand().rangeRound([height, 0]);
 
     x.domain(years);
-    y.domain(ages.sort(function (a,b){return b-a}));
+    // y.domain(ages.sort(function (a,b){return b-a}));
+    //ES 6 from the above we can write it like this:
+    y.domain(ages.sort((a,b)=>{return b-a}));
+
 
     g.append("g")
       .call(d3.axisTop(x))
@@ -60,9 +68,6 @@ function loadData(){
         .attr("id","grid")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-
-
-
     let nested_data = d3.nest()
       .key((d) => d.Age)
       .key((d) => d.Year)
@@ -70,7 +75,6 @@ function loadData(){
       .rollup((v) => v.length)
       .entries(data.filter(d => d.Gender == "Men" | d.Gender == "Women"))
 
-  console.log(nested_data);
 
       // function to get values out
       get_value = (arr, gender) => {
@@ -127,11 +131,20 @@ function update(gender){
   circles
     .attr("class", gender)
     .attr('r',0)
-    .attr('cx', function(d){return x(d.Year)})
-    .attr('cy', function(d){return y(d.Age)})
+    // .attr('cx', function(d){return x(d.Year)})
+    // .attr('cy', function(d){return y(d.Age)})
+    .attr('cx', (d)=>{return x(d.Year)})
+    .attr('cy', (d)=>{return y(d.Age)})
     .transition(t)
     .ease(d3.easeBounce)
-    .attr('r',function(d){
+    // .attr('r',function(d){
+    //     if (gender==='Men'){
+    //       return radius(d.Men)
+    //     }else{
+    //       return radius(d.Women)
+    //     }
+    // })
+    .attr('r',(d)=>{
         if (gender==='Men'){
           return radius(d.Men)
         }else{
@@ -147,11 +160,20 @@ function update(gender){
     .append('circle')
     .attr("class", gender)
     .attr('r',0)
-    .attr('cx', function(d){return x(d.Year)})
-    .attr('cy', function(d){return y(d.Age)})
+    // .attr('cx', function(d){return x(d.Year)})
+    // .attr('cy', function(d){return y(d.Age)})
+    .attr('cx', (d)=>{return x(d.Year)})
+    .attr('cy', (d)=>{return y(d.Age)})
     .transition(t)
     .ease(d3.easeBounce)
-    .attr('r',function(d){
+    // .attr('r',function(d){
+    //     if (gender==='Men'){
+    //       return radius(d.Men)
+    //     }else{
+    //       return radius(d.Women)
+    //     }
+    // })
+    .attr('r',(d)=>{
         if (gender==='Men'){
           return radius(d.Men)
         }else{
